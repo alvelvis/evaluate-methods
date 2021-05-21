@@ -5,19 +5,25 @@ Corpora sendo comparados:
 * Bosque-UD
 
 Sistema: bosqueud-2.5-test_udpipe.conllu (modelo: pré-treinado (portuguese-bosque-ud-2.5-191206.udpipe))
+
 Sistema_guia: bosqueud-2.5-test_stanza.conllu (modelo: pré-treinado (Bosque-UD 2.5))
+
 Golden: bosqueud-2.5-test.conllu
 
 * Petrolês 1
 
 Sistema: Petroles_1_udpipe.conllu (modelo: pré-treinado (portuguese-bosque-ud-2.5-191206.udpipe))
+
 Sistema_guia: Petroles_1_stanza.conllu (modelo: pré-treinado (Bosque-UD 2.5))
+
 Golden: Petroles_1.conllu
 
 * Petrolês 2
 
 Sistema: Petroles_2_udpipe.conllu (modelo: Bosque-train2.6+Petroles_1.udpipe)
+
 Sistema_guia: Petroles_2_stanza.conllu (modelo: Bosque-train2.6+Petroles_1.stanza => ICA)
+
 Golden: Petroles_2.conllu
 
 ## Procedimentos
