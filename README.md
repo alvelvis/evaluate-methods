@@ -65,9 +65,15 @@ python3 evaluate_methods_Passiva.py Petroles_2_udpipe.conllu Petroles_2_B.conllu
 conll18_metrics:
 
 ```
-python3 conll18_ud_eval.py -v bosqueud-2.5-test.conllu bosqueud-2.5-test_stanza.conllu > bosqueud-2.5.metrics
-python3 conll18_ud_eval.py -v Petroles_1.conllu Petroles_1_stanza.conllu > Petroles_1.metrics
-python3 conll18_ud_eval.py -v Petroles_2.conllu Petroles_2_B.conllu > Petroles_2.metrics
+python3 conll18_ud_eval.py -v bosqueud-2.5-test.conllu bosqueud-2.5-test_stanza.conllu > bosqueud-2.5_stanza.metrics
+python3 conll18_ud_eval.py -v Petroles_1.conllu Petroles_1_stanza.conllu > Petroles_1_stanza.metrics
+python3 conll18_ud_eval.py -v Petroles_2.conllu Petroles_2_B.conllu > Petroles_2_stanza.metrics
+```
+
+```
+python3 conll18_ud_eval.py -v bosqueud-2.5-test.conllu bosqueud-2.5-test_udpipe.conllu > bosqueud-2.5_udpipe.metrics
+python3 conll18_ud_eval.py -v Petroles_1.conllu Petroles_1_udpipe.conllu > Petroles_1_udpipe.metrics
+python3 conll18_ud_eval.py -v Petroles_2.conllu Petroles_2_udpipe.conllu > Petroles_2_udpipe.metrics
 ```
 
 

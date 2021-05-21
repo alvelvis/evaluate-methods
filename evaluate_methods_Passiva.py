@@ -34,13 +34,17 @@ for sentid, sentence in sistema.sentences.items():
 
 #DICIONÁRIO COM TODAS AS MODIFICAÇÕES REALIZADAS
 all_modifications = set()
+all_modifications_lemma = set()
 for sentid, sentence in golden.sentences.items():
     if (all(sentid in x.sentences for x in [sistema_guia, sistema]) and 
     all(len(sentence.tokens) == len(x.sentences[sentid].tokens) for 
     x in [sistema_guia, sistema])):
         for t, token in enumerate(sentence.tokens):
-            if token.to_str() != sistema_guia.sentences[sentid].tokens[t].to_str():
+            if any(token.__dict__[x] != sistema_guia.sentences[sentid].tokens[t].__dict__[x] for 
+            x in ["lemma", "upos", "feats", "deprel", "dephead"]):
                 all_modifications.add(f"{sentid}<tok>{t}")
+            if token.__dict__['lemma'] != sistema_guia.sentences[sentid].tokens[t].__dict__['lemma']:
+                all_modifications_lemma.add(f"{sentid}<tok>{t}")
 
 #DICIONÁRIOS COM OS ERROS APONTADOS
 errors_validar_UD = set()
@@ -281,6 +285,10 @@ html += "<tr><th>Método</th><th>Erros detectados (por token)</th><th>Verdadeiro
 
 html += "<tr><td>Nenhum método</td><td colspan='42'>{}</td></tr>".format(
     len(all_modifications - set.union(*metodos.values()))
+)
+
+html += "<tr><td>Nenhum método (com erro de lema)</td><td colspan='42'>{}</td></tr>".format(
+    len(all_modifications_lemma - set.union(*metodos.values()))
 )
 
 for combination in sorted([x for x in list(combinatoria) if x], key=lambda x: x[0]):
