@@ -281,7 +281,7 @@ html += "</table><hr>"
 
 html += "<h2>Avaliação dos métodos</h2><hr>"
 html += "<table border='1'>"
-html += "<tr><th>Método</th><th>Erros detectados (por token)</th><th>Verdadeiro Positivo</th><th>Falso Positivo</th><th>Precisão</th><th>Abrangência</th><th title='Erros detectados por todos os métodos DESSA linha'>Erros repetidos</th><th>Repetidos VP</th></tr>"
+html += "<tr><th>Método</th><th>Erros detectados (por token)</th><th>Verdadeiro Positivo</th><th>Falso Positivo</th><th>Precisão</th><th>Abrangência</th><th>F1</th><th title='Erros detectados por todos os métodos DESSA linha'>Erros repetidos</th><th>Repetidos VP</th></tr>"
 
 html += "<tr><td>Nenhum método</td><td colspan='42'>{}</td></tr>".format(
     len(all_modifications - set.union(*metodos.values()))
@@ -292,7 +292,20 @@ html += "<tr><td>Nenhum método (com erro de lema)</td><td colspan='42'>{}</td><
 )
 
 for combination in sorted([x for x in list(combinatoria) if x], key=lambda x: x[0]):
-    html += "<tr><td>{}{}{}</td><td>{}</td><td>{}</td><td>{}</td><td>{:.2f}%</td><td>{:.2f}%</td><td>{}</td><td>{}</td></tr>".format(
+    precision = (len(all_modifications.intersection(set.union(*[
+            metodos[metodo] for metodo in combination
+            ])))*100 / 
+            len(set.union(*[
+                metodos[metodo] for metodo in combination
+                ])) if len(set.union(*[
+                    metodos[metodo] for metodo in combination
+                    ])) > 0 else 0)
+    recall = (len(all_modifications.intersection(set.union(*[
+            metodos[metodo] for metodo in combination
+            ])))*100 / 
+            len(all_modifications))
+    f1 = 2*((precision*recall)/(precision+recall)) if precision+recall > 0 else 0
+    html += "<tr><td>{}{}{}</td><td>{}</td><td>{}</td><td>{}</td><td>{:.2f}%</td><td>{:.2f}%</td><td>{:.2f}%</td><td>{}</td><td>{}</td></tr>".format(
         '<b>' if len(combination) == 1 else '',
         ' + '.join(combination),
         '</b>' if len(combination) == 1 else '',
@@ -305,18 +318,9 @@ for combination in sorted([x for x in list(combinatoria) if x], key=lambda x: x[
         len(set.union(*[
             metodos[metodo] for metodo in combination
             ]) - all_modifications),
-        len(all_modifications.intersection(set.union(*[
-            metodos[metodo] for metodo in combination
-            ])))*100 / 
-            len(set.union(*[
-                metodos[metodo] for metodo in combination
-                ])) if len(set.union(*[
-                    metodos[metodo] for metodo in combination
-                    ])) > 0 else 0,
-        len(all_modifications.intersection(set.union(*[
-            metodos[metodo] for metodo in combination
-            ])))*100 / 
-            len(all_modifications),
+        precision,
+        recall,
+        f1,
         len(set.intersection(*[
             metodos[metodo] for metodo in combination
             ])) if len(combination) > 1 else 'Não se aplica',
