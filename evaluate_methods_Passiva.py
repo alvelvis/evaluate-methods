@@ -35,16 +35,19 @@ for sentid, sentence in sistema.sentences.items():
 #DICIONÁRIO COM TODAS AS MODIFICAÇÕES REALIZADAS
 all_modifications = set()
 all_modifications_lemma = set()
+all_tokens = set()
 for sentid, sentence in golden.sentences.items():
     if (all(sentid in x.sentences for x in [sistema_guia, sistema]) and 
     all(len(sentence.tokens) == len(x.sentences[sentid].tokens) for 
     x in [sistema_guia, sistema])):
         for t, token in enumerate(sentence.tokens):
-            if any(token.__dict__[x] != sistema_guia.sentences[sentid].tokens[t].__dict__[x] for 
-            x in ["lemma", "upos", "feats", "deprel", "dephead"]):
-                all_modifications.add(f"{sentid}<tok>{t}")
-            if token.__dict__['lemma'] != sistema_guia.sentences[sentid].tokens[t].__dict__['lemma']:
-                all_modifications_lemma.add(f"{sentid}<tok>{t}")
+            if not '-' in token.id:
+                all_tokens.add(f"{sentid}<tok>{t}")
+                if any(token.__dict__[x] != sistema_guia.sentences[sentid].tokens[t].__dict__[x] for 
+                x in ["lemma", "upos", "feats", "deprel", "dephead"]):
+                    all_modifications.add(f"{sentid}<tok>{t}")
+                if token.__dict__['lemma'] != sistema_guia.sentences[sentid].tokens[t].__dict__['lemma']:
+                    all_modifications_lemma.add(f"{sentid}<tok>{t}")
 
 #DICIONÁRIOS COM OS ERROS APONTADOS
 errors_validar_UD = set()
@@ -72,23 +75,24 @@ for sentid, sentence in sistema_guia.sentences.items():
     all(len(sentence.tokens) == len(x.sentences[sentid].tokens) for 
     x in [sistema_guia, sistema, golden])):
         for t, token in enumerate(sentence.tokens):
-            for coluna in ['deprel', 'dephead', 'upos']:
-                if token.__dict__[coluna] == sistema.sentences[sentid].tokens[t].__dict__[coluna]:
-                    convergence[coluna].add(f"{sentid}<tok>{t}")
-                    if token.__dict__[coluna] == golden.sentences[sentid].tokens[t].__dict__[coluna]:
-                        good_convergence[coluna].add(f"{sentid}<tok>{t}")
-                    else:
-                        bad_convergence[coluna].add(f"{sentid}<tok>{t}")
-                elif token.__dict__[coluna] != sistema.sentences[sentid].tokens[t].__dict__[coluna]:
-                    confusion_matrix[coluna].add(f"{sentid}<tok>{t}")
-                    if golden.sentences[sentid].tokens[t].__dict__[coluna] == sistema_guia.sentences[sentid].tokens[t].__dict__[coluna]:
-                        confusion_matrix_hit[coluna]['sistema_guia'].add(f"{sentid}<tok>{t}")
-                    elif golden.sentences[sentid].tokens[t].__dict__[coluna] == sistema.sentences[sentid].tokens[t].__dict__[coluna]:
-                        confusion_matrix_hit[coluna]['sistema'].add(f"{sentid}<tok>{t}")
-                        confusion_matrix_errors[coluna].add(f"{sentid}<tok>{t}")
-                    else:
-                        confusion_matrix_hit[coluna]['none'].add(f"{sentid}<tok>{t}")
-                        confusion_matrix_errors[coluna].add(f"{sentid}<tok>{t}")
+            if not '-' in token.id:
+                for coluna in ['deprel', 'dephead', 'upos']:
+                    if token.__dict__[coluna] == sistema.sentences[sentid].tokens[t].__dict__[coluna]:
+                        convergence[coluna].add(f"{sentid}<tok>{t}")
+                        if token.__dict__[coluna] == golden.sentences[sentid].tokens[t].__dict__[coluna]:
+                            good_convergence[coluna].add(f"{sentid}<tok>{t}")
+                        else:
+                            bad_convergence[coluna].add(f"{sentid}<tok>{t}")
+                    elif token.__dict__[coluna] != sistema.sentences[sentid].tokens[t].__dict__[coluna]:
+                        confusion_matrix[coluna].add(f"{sentid}<tok>{t}")
+                        if golden.sentences[sentid].tokens[t].__dict__[coluna] == sistema_guia.sentences[sentid].tokens[t].__dict__[coluna]:
+                            confusion_matrix_hit[coluna]['sistema_guia'].add(f"{sentid}<tok>{t}")
+                        elif golden.sentences[sentid].tokens[t].__dict__[coluna] == sistema.sentences[sentid].tokens[t].__dict__[coluna]:
+                            confusion_matrix_hit[coluna]['sistema'].add(f"{sentid}<tok>{t}")
+                            confusion_matrix_errors[coluna].add(f"{sentid}<tok>{t}")
+                        else:
+                            confusion_matrix_hit[coluna]['none'].add(f"{sentid}<tok>{t}")
+                            confusion_matrix_errors[coluna].add(f"{sentid}<tok>{t}")
 
 cristian_marneffe_lexicais = []
 cristian_marneffe_lexicais_dependency = []
@@ -281,7 +285,7 @@ html += "</table><hr>"
 
 html += "<h2>Avaliação dos métodos</h2><hr>"
 html += "<table border='1'>"
-html += "<tr><th>Método</th><th>Erros detectados (por token)</th><th>Verdadeiro Positivo</th><th>Falso Positivo</th><th>Precisão</th><th>Abrangência</th><th>F1</th><th title='Erros detectados por todos os métodos DESSA linha'>Erros repetidos</th><th>Repetidos VP</th></tr>"
+html += "<tr><th>Método</th><th>Erros detectados (por token)</th><th>Verdadeiro Positivo</th><th>Falso Positivo</th><th>Precisão</th><th>Abrangência</th><th>F1</th><th>Acurácia</th><th title='Erros detectados por todos os métodos DESSA linha'>Erros repetidos</th><th>Repetidos VP</th></tr>"
 
 html += "<tr><td>Nenhum método</td><td colspan='42'>{}</td></tr>".format(
     len(all_modifications - set.union(*metodos.values()))
@@ -305,7 +309,13 @@ for combination in sorted([x for x in list(combinatoria) if x], key=lambda x: x[
             ])))*100 / 
             len(all_modifications))
     f1 = 2*((precision*recall)/(precision+recall)) if precision+recall > 0 else 0
-    html += "<tr><td>{}{}{}</td><td>{}</td><td>{}</td><td>{}</td><td>{:.2f}%</td><td>{:.2f}%</td><td>{:.2f}%</td><td>{}</td><td>{}</td></tr>".format(
+    accuracy = ((len(all_modifications.intersection(set.union(*[
+            metodos[metodo] for metodo in combination
+            ]))) + len((all_tokens - set.union(*[
+            metodos[metodo] for metodo in combination
+            ])).intersection(all_tokens - all_modifications))
+     ) / len(all_tokens)) * 100
+    html += "<tr><td>{}{}{}</td><td>{}</td><td>{}</td><td>{}</td><td>{:.2f}%</td><td>{:.2f}%</td><td>{:.2f}%</td><td>{:.2f}%</td><td>{}</td><td>{}</td></tr>".format(
         '<b>' if len(combination) == 1 else '',
         ' + '.join(combination),
         '</b>' if len(combination) == 1 else '',
@@ -321,6 +331,7 @@ for combination in sorted([x for x in list(combinatoria) if x], key=lambda x: x[
         precision,
         recall,
         f1,
+        accuracy,
         len(set.intersection(*[
             metodos[metodo] for metodo in combination
             ])) if len(combination) > 1 else 'Não se aplica',
